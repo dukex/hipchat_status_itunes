@@ -60,7 +60,6 @@ func main() {
 
 func clientRequest(method, url string, data string) ([]byte, error) {
 	requestURL := hipchatRoot + url + "?auth_token=" + token
-	log.Println(requestURL)
 	client := &http.Client{}
 	request, err := http.NewRequest(method, requestURL, strings.NewReader(data))
 	request.Header.Set("Content-Type", "application/json")
