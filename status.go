@@ -14,8 +14,7 @@ import (
 
 const (
 	commandCurrentTrack string = "Tell Application \"iTunes\" to (get name of current track) & \"\n\" & (get artist of current track)"
-	//	token               string = "gRBEgk3rehdLrQRTtUyjWln7KAAiPeKgfUNYsEAj"
-	hipchatRoot string = "https://api.hipchat.com/v2/"
+	hipchatRoot         string = "https://api.hipchat.com/v2/"
 )
 
 type Track struct {
@@ -40,19 +39,21 @@ func main() {
 	for {
 		select {
 		case newTrack := <-trackC:
-			status := "♫ " + newTrack.Title + " - " + newTrack.Artist
+			status := "♫  " + newTrack.Title + " - " + newTrack.Artist
+			log.Println("Changing status to:", status)
 			changeHipchatStatus(status)
 		case <-tickerC:
 			current, err := exec.Command("/usr/bin/osascript", "-e", commandCurrentTrack).Output()
 			if err != nil {
-				log.Fatal(err)
-			}
-			t := strings.Split(string(current), "\n")
-			if currentTrack.Title != t[0] {
-				currentTrack = Track{t[0], t[1]}
-				go func() {
-					trackC <- currentTrack
-				}()
+				log.Println("Itunes Stoped or Paused", err)
+			} else {
+				t := strings.Split(string(current), "\n")
+				if currentTrack.Title != t[0] {
+					currentTrack = Track{t[0], t[1]}
+					go func() {
+						trackC <- currentTrack
+					}()
+				}
 			}
 		}
 	}
@@ -88,7 +89,7 @@ func changeHipchatStatus(status string) {
 
 	getData, err := clientRequest("GET", "user/"+userID, "")
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	json.Unmarshal(getData, &data)
@@ -97,8 +98,7 @@ func changeHipchatStatus(status string) {
 	params, _ := json.Marshal(&data)
 
 	_, err = clientRequest("PUT", "user/"+userID, string(params))
-
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 }
